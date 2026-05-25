@@ -17,20 +17,20 @@
     </style>
 </head>
 <body>
-    <div class="header">NEXUS AI • Groq</div>
+    <div class="header">NEXUS AI • Groq (Llama 3.1)</div>
     <div id="chat">
-        <div class="msg ai">Groq token'ını girerek başlayın (gsk_ ile başlayan)</div>
+        <div class="msg ai">Merhaba! Hazırım. Mesaj yazmaya başlayabilirsin.</div>
     </div>
     
     <div class="input-area">
         <div class="input-box">
-            <input type="text" id="in" placeholder="Token veya mesaj...">
+            <input type="text" id="in" placeholder="Mesajınızı yazın...">
             <button id="btn">GÖNDER</button>
         </div>
     </div>
 
     <script>
-        let token = localStorage.getItem("groq_token") || "";
+        const token = "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";
 
         const chat = document.getElementById("chat");
         const input = document.getElementById("in");
@@ -45,24 +45,9 @@
         }
 
         btn.onclick = async () => {
-            let text = input.value.trim();
+            const text = input.value.trim();
             if (!text) return;
 
-            // Token girme kısmı
-            if (!token) {
-                if (text.startsWith("gsk_")) {
-                    localStorage.setItem("groq_token", text);
-                    token = text;
-                    addMessage("✅ Token başarıyla kaydedildi! Artık sohbet edebiliriz.", "ai");
-                    input.value = "";
-                    return;
-                } else {
-                    addMessage("❌ Lütfen gsk_ ile başlayan Groq token girin.", "ai");
-                    return;
-                }
-            }
-
-            // Normal sohbet
             addMessage(text, "user");
             input.value = "";
 
@@ -80,7 +65,7 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        model: "llama3-8b-8192",
+                        model: "llama-3.1-8b-instant",   // ← Güncel model
                         messages: [{ role: "user", content: text }],
                         temperature: 0.7,
                         max_tokens: 900

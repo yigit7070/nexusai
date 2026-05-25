@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #080c14; color: #f3f4f6; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { width: 100%; max-width: 900px; height: 90vh; background: #0f1423; border-radius: 20px; box-shadow: 0 0 30px rgba(255, 0, 128, 0.2); border: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #161f38; padding: 15px 20px; border-bottom: 2px solid #ff007f; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header h1 { font-size: 1.3rem; color: #ff007f; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 0, 128, 0.5); }
+        .mode-selector { display: flex; gap: 10px; }
+        .mode-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
+        .mode-btn.active { background: #ff007f; color: #ffffff; border-color: #ff007f; box-shadow: 0 0 10px rgba(255, 0, 128, 0.4); }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .message { max-width: 80%; padding: 14px 20px; border-radius: 15px; line-height: 1.6; font-size: 0.95rem; }
+        .user-message { background: #ff007f; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .ai-message { background: #1e293b; color: #f3f4f6; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #334155; }
+        .generated-video { width: 100%; max-width: 500px; border-radius: 10px; margin-top: 10px; border: 2px solid #00f2fe; display: block; }
+        .chat-input-area { padding: 20px; background: #0f1423; border-top: 1px solid #1e293b; display: flex; gap: 12px; }
+        .chat-input-area input { flex: 1; background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 12px; color: #f3f4f6; font-size: 1rem; outline: none; }
+        .chat-input-area button { background: #ff007f; color: white; border: none; padding: 0 30px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .loading { font-style: italic; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>NEXUS AI CANLI</h1>
+            <div class="mode-selector">
+                <button class="mode-btn active" id="btnChat" onclick="setMode('chat')">Soru-Cevap</button>
+                <button class="mode-btn" id="btnVideo" onclick="setMode('video')">Video Üret</button>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai-message">
+                Sistem sıfırdan kuruldu! Soru-Cevap modunda bana dilediğini sorabilirsin. Video modunda ise kısa İngilizce komutlar verebilirsin.
+            </div>
+        </div>
+
+        <div

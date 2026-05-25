@@ -4,73 +4,93 @@
     <meta charset="UTF-8">
     <title>Nexus AI | Premium</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .header { padding: 20px; font-weight: bold; font-size: 1.5rem; text-align: center; border-bottom: 2px solid #ff0055; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 15px; border-radius: 5px; max-width: 80%; }
-        .ai { background: #1a1a1a; border-left: 4px solid #ff0055; align-self: flex-start; }
-        .user { background: #333; align-self: flex-end; }
-        .input-area { padding: 20px; border-top: 1px solid #333; display: flex; justify-content: center; }
-        .input-box { width: 100%; max-width: 600px; display: flex; gap: 10px; }
-        input { flex: 1; padding: 15px; background: #000; border: 1px solid #ff0055; color: #fff; outline: none; }
-        button { padding: 15px 25px; background: #ff0055; border: none; color: #fff; cursor: pointer; font-weight: bold; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        .header { padding: 20px; font-weight: bold; font-size: 1.6rem; text-align: center; background: #111; border-bottom: 3px solid #ff0055; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .msg { padding: 14px 18px; border-radius: 12px; max-width: 85%; line-height: 1.5; }
+        .ai { background: #1a1a1a; border-left: 5px solid #ff0055; align-self: flex-start; }
+        .user { background: #ff0055; color: white; align-self: flex-end; }
+        .input-area { padding: 20px; background: #111; border-top: 1px solid #333; }
+        .input-box { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; }
+        input { flex: 1; padding: 16px; background: #000; border: 1px solid #ff0055; color: #fff; border-radius: 8px; font-size: 1.05rem; }
+        button { padding: 0 28px; background: #ff0055; border: none; color: #fff; cursor: pointer; font-weight: bold; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <div class="header">NEXUS AI | PREMİUM</div>
-    <div id="chat"><div class="msg ai">Token'ını gir ve BAŞLAT'a bas.</div></div>
+    <div class="header">NEXUS AI • GEMMA-2 2B</div>
+    <div id="chat">
+        <div class="msg ai">Merhaba! Mesaj yazmaya başlayabilirsin.</div>
+    </div>
+    
     <div class="input-area">
         <div class="input-box">
-            <input type="text" id="in" placeholder="Token veya mesaj...">
-            <button id="btn" onclick="init()">BAŞLAT</button>
+            <input type="text" id="in" placeholder="Mesajınızı yazın...">
+            <button id="btn">GÖNDER</button>
         </div>
     </div>
 
     <script>
-        let token = localStorage.getItem("nexus_token") || "";
-        const btn = document.getElementById("btn");
+        const token = "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";
+
+        const chat = document.getElementById("chat");
         const input = document.getElementById("in");
+        const btn = document.getElementById("btn");
 
-        if(token) { btn.innerText = "GÖNDER"; btn.onclick = send; }
-
-        function init() {
-            if(!token && input.value.startsWith("hf_")) {
-                localStorage.setItem("nexus_token", input.value);
-                token = input.value;
-                btn.innerText = "GÖNDER";
-                btn.onclick = send;
-                input.value = "";
-                alert("Sistem bağlandı!");
-            }
-        }
-
-        async function send() {
-            const text = input.value;
-            if(!text) return;
-            const chat = document.getElementById("chat");
-            chat.innerHTML += `<div class="msg user">${text}</div>`;
-            input.value = "";
-            
-            try {
-                // Daha hafif ve hızlı bir model kullanıyoruz
-                const res = await fetch("https://api-inference.huggingface.co/models/google/gemma-2-2b-it", {
-                    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-                    method: "POST",
-                    body: JSON.stringify({ inputs: text })
-                });
-                
-                const data = await res.json();
-                
-                if(data.error) {
-                    chat.innerHTML += `<div class="msg ai">HATA: ${data.error}</div>`;
-                } else {
-                    chat.innerHTML += `<div class="msg ai">${data[0]?.generated_text || "Cevap üretilemedi."}</div>`;
-                }
-            } catch(e) { 
-                chat.innerHTML += `<div class="msg ai">Bağlantı hatası: ${e.message}</div>`; 
-            }
+        function addMessage(text, type) {
+            const div = document.createElement("div");
+            div.className = `msg ${type}`;
+            div.innerHTML = text;
+            chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         }
+
+        btn.onclick = async () => {
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, "user");
+            input.value = "";
+
+            const loading = document.createElement("div");
+            loading.className = "msg ai";
+            loading.textContent = "Düşünüyor...";
+            chat.appendChild(loading);
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const res = await fetch("https://api-inference.huggingface.co/models/google/gemma-2-2b-it", {
+                    headers: { 
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json" 
+                    },
+                    method: "POST",
+                    body: JSON.stringify({
+                        inputs: `<start_of_turn>user\n${text}<end_of_turn>\n<start_of_turn>model\n`,
+                        parameters: { 
+                            max_new_tokens: 800, 
+                            temperature: 0.8,
+                            top_p: 0.9
+                        }
+                    })
+                });
+
+                const data = await res.json();
+                loading.remove();
+
+                if (data.error) {
+                    addMessage("Hata: " + data.error, "ai");
+                } else {
+                    let cevap = data[0]?.generated_text || "Cevap yok";
+                    cevap = cevap.replace(/<start_of_turn>model\n?/g, "").trim();
+                    addMessage(cevap, "ai");
+                }
+            } catch (e) {
+                loading.remove();
+                addMessage("Hata: " + e.message + "<br><br>GitHub Pages üzerinden açtığından emin ol.", "ai");
+            }
+        };
+
+        input.addEventListener("keypress", e => { if (e.key === "Enter") btn.click(); });
     </script>
 </body>
 </html>

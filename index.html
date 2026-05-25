@@ -2,58 +2,59 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Nexus AI VIP</title>
+    <title>Nexus AI | Premium</title>
+    <script src="https://cdn.jsdelivr.net/npm/@huggingface/inference@2.6.4/dist/index.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: #040810; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .chat-container { width: 90%; max-width: 800px; height: 80vh; background: #0a0f1d; border-radius: 20px; border: 1px solid #333; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .message { padding: 12px; border-radius: 10px; max-width: 80%; }
-        .ai-message { background: #1f2937; align-self: flex-start; }
-        .user-message { background: #ff007f; align-self: flex-end; }
-        .input-area { padding: 20px; display: flex; gap: 10px; background: #0b1329; }
-        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1f2937; color: white; }
-        button { padding: 10px 20px; background: #ff007f; border: none; border-radius: 8px; color: white; cursor: pointer; }
+        body { background: #0a0a0a; color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { padding: 20px; font-weight: bold; font-size: 1.5rem; color: #fff; border-bottom: 2px solid #ff0055; text-align: center; text-transform: uppercase; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { padding: 15px; border-radius: 5px; max-width: 80%; }
+        .ai { background: #1a1a1a; border-left: 4px solid #ff0055; align-self: flex-start; }
+        .user { background: #333; align-self: flex-end; }
+        .input-area { padding: 20px; border-top: 1px solid #333; display: flex; justify-content: center; }
+        .input-box { width: 100%; max-width: 600px; display: flex; gap: 10px; }
+        input { flex: 1; padding: 15px; background: #000; border: 1px solid #ff0055; color: #fff; border-radius: 3px; outline: none; }
+        button { padding: 15px 25px; background: #ff0055; border: none; color: #fff; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-messages" id="chat">
-            <div class="message ai-message">VIP Sistem Aktif! Bir soru sor.</div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="in" placeholder="Mesaj yaz...">
-            <button onclick="send()">Gönder</button>
+    <div class="header">NEXUS AI | PREMİUM</div>
+    <div id="chat"><div class="msg ai">Token girin ve 'BAŞLAT'a basın.</div></div>
+    <div class="input-area">
+        <div class="input-box">
+            <input type="text" id="in" placeholder="Token veya mesaj...">
+            <button id="btn" onclick="init()">BAŞLAT</button>
         </div>
     </div>
 
     <script>
-        // GitHub botunu atlatmak için şifreyi ters çevirip birleştirdik
-        const rev = "sUrFrDlFfWPMGZRWTozUeUnUhcJhUvIVPScgky_fh";
-        const HF_TOKEN = rev.split("").reverse().join("");
+        let hf;
+        const btn = document.getElementById("btn");
+        const input = document.getElementById("in");
+        let token = localStorage.getItem("nexus_token") || "";
+
+        if(token) { hf = new HfInference.HfInference(token); btn.innerText = "GÖNDER"; btn.onclick = send; }
+
+        function init() {
+            if(!token && input.value.startsWith("hf_")) {
+                token = input.value;
+                localStorage.setItem("nexus_token", token);
+                hf = new HfInference.HfInference(token);
+                btn.innerText = "GÖNDER"; btn.onclick = send;
+                input.value = ""; input.placeholder = "Mesaj yaz...";
+                alert("Bağlandı!");
+            }
+        }
 
         async function send() {
-            const input = document.getElementById("in");
-            const chat = document.getElementById("chat");
             const text = input.value;
             if(!text) return;
-
-            chat.innerHTML += `<div class="message user-message">${text}</div>`;
+            document.getElementById("chat").innerHTML += `<div class="msg user">${text}</div>`;
             input.value = "";
-
             try {
-                const res = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct", {
-                    headers: { "Authorization": "Bearer " + HF_TOKEN, "Content-Type": "application/json" },
-                    method: "POST",
-                    body: JSON.stringify({ inputs: text })
-                });
-                const data = await res.json();
-                const reply = data[0]?.generated_text || "Hata oluştu.";
-                chat.innerHTML += `<div class="message ai-message">${reply}</div>`;
-            } catch(e) {
-                chat.innerHTML += `<div class="message ai-message">Hata: Bağlantı başarısız.</div>`;
-            }
-            chat.scrollTop = chat.scrollHeight;
+                const res = await hf.textGeneration({ model: 'Qwen/Qwen2.5-7B-Instruct', inputs: text });
+                document.getElementById("chat").innerHTML += `<div class="msg ai">${res.generated_text}</div>`;
+            } catch(e) { document.getElementById("chat").innerHTML += `<div class="msg ai">Bağlantı Hatası: Token yanlış olabilir.</div>`; }
         }
     </script>
 </body>
